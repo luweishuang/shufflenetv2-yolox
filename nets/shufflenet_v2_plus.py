@@ -2,6 +2,7 @@ from collections import OrderedDict
 
 import torch
 import torch.nn as nn
+import numpy as np
 
 
 class SELayer(nn.Module):
@@ -331,33 +332,33 @@ class ShuffleNetV2_Plus(nn.Module):
                     nn.init.constant_(m.bias, 0)
 
 
-def shufflenet_v2_plus(pretrained=False, **kwargs):
-    model = ShuffleNetV2_Plus(**kwargs)
-    if pretrained:
-        if model.model_size == 'Large':
-            state_dic = torch.load(
-                './weights/ShuffleNetV2+.Large.pth')
-        elif model.model_size == 'Medium':
-            state_dic = torch.load(
-                './weights/ShuffleNetV2+.Medium.pth')
-        else:
-            state_dic = torch.load(
-                './weights/ShuffleNetV2+.Small.pth')
-        new_dict = OrderedDict()
-        for key, v in state_dic['state_dict'].items():
-            name = key[7:]
-            new_dict[name] = v
-        model.load_state_dict(new_dict)
-    return model
+# def shufflenet_v2_plus(pretrained=False, **kwargs):
+#     model = ShuffleNetV2_Plus(**kwargs)
+#     if pretrained:
+#         if model.model_size == 'Large':
+#             state_dic = torch.load(
+#                 '../model_data/ShuffleNetV2+.Large.pth')
+#         elif model.model_size == 'Medium':
+#             state_dic = torch.load(
+#                 './weights/ShuffleNetV2+.Medium.pth')
+#         else:
+#             state_dic = torch.load(
+#                 './weights/ShuffleNetV2+.Small.pth')
+#         model_dict = model.state_dict()
+#         load_key, no_load_key, temp_dict = [], [], {}
+#         for key, v in state_dic['state_dict'].items():
+#             temp_key = key[7:]
+#             if temp_key in model_dict.keys() and np.shape(v) == np.shape(model_dict[temp_key]):
+#                 temp_dict[temp_key] = v
+#                 load_key.append(temp_key)
+#             else:
+#                 no_load_key.append(temp_key)
+#         model_dict.update(temp_dict)
+#         model.load_state_dict(model_dict)
+#         print("\nSuccessful Load Key:", str(load_key)[:500], "……\nSuccessful Load Key Num:",
+#               len(load_key))  # 显示成功load的key和数量
+#         print("\nFail To Load Key:", str(no_load_key)[:500], "……\nFail To Load Key num:",
+#               len(no_load_key))  # 显示没有成功load的key和数量
+#         print("\n\033[1;33;44m温馨提示，head部分没有载入是正常现象，Backbone部分没有载入是错误的。\033[0m")
+#     return model
 
-
-if __name__ == "__main__":
-    architecture = [0, 0, 3, 1, 1, 1, 0, 0, 2, 0, 2, 1, 1, 0, 2, 0, 2, 1, 3, 2]
-    model = ShuffleNetV2_Plus(architecture=architecture)
-    print(model)
-
-    # model = shufflenet_v2_plus(pretrained=True)
-    #
-    # test_data = torch.rand(5, 3, 224, 224)
-    # test_outputs = model(test_data)
-    # print(test_outputs.size())

@@ -1,14 +1,16 @@
 import torch
 import torch.nn as nn
+from collections import OrderedDict
+import numpy as np
 
-from nets.shufflenet_v2_plus import shufflenet_v2_plus
+from nets.shufflenet_v2_plus import ShuffleNetV2_Plus
 from nets.detection_head import YoloxHead
 
 
 class ShuffleNetV2Plus(nn.Module):
-    def __init__(self, pretrained=False, **kwargs):
+    def __init__(self, model_size):
         super(ShuffleNetV2Plus, self).__init__()
-        self.model = shufflenet_v2_plus(pretrained=pretrained, **kwargs)
+        self.model = ShuffleNetV2_Plus(model_size=model_size)
 
     def forward(self, x):
         x = self.model.first_conv(x)
@@ -22,9 +24,9 @@ class ShuffleNetV2Plus(nn.Module):
 #   yolo_body
 # ---------------------------------------------------#
 class YoloBody(nn.Module):
-    def __init__(self, num_classes, pretrained=False, model_size="Large"):
+    def __init__(self, num_classes, model_size="Large"):
         super(YoloBody, self).__init__()
-        self.backbone = ShuffleNetV2Plus(pretrained=pretrained, model_size=model_size)
+        self.backbone = ShuffleNetV2Plus(model_size)
         if model_size == 'Small':
             in_filters = [104, 208, 416]
         elif model_size == "Medium":
@@ -43,5 +45,17 @@ class YoloBody(nn.Module):
 
 
 if __name__ == '__main__':
-    model = YoloBody(num_classes=1)
-    inputs = torch.rand((2, 3, 640, 640))
+    model = YoloBody(1)
+    model_dict = model.state_dict()
+    pretrained_dict = torch.load('./shufflenetv2plus.pth')
+    load_key, no_load_key, temp_dict = [], [], {}
+    for k, v in pretrained_dict.items():
+        if k in model_dict.keys() and np.shape(model_dict[k]) == np.shape(v):
+            temp_dict[k] = v
+            load_key.append(k)
+        else:
+            no_load_key.append(k)
+    model_dict.update(temp_dict)
+    model.load_state_dict(model_dict)
+    print("\nSuccessful Load Key:", str(load_key)[:500], "……\nSuccessful Load Key Num:", len(load_key))
+    print("\nFail To Load Key:", str(no_load_key)[:500], "……\nFail To Load Key num:", len(no_load_key))

@@ -107,7 +107,8 @@ if __name__ == "__main__":
     if map_mode == 0 or map_mode == 2:
         print("Get ground truth result.")
         for image_id in tqdm(image_ids):
-            with open(os.path.join(map_out_path, "ground-truth/" + image_id + ".txt"), "w") as new_f:  # 在ground-truth文件夹下写GT信息
+            with open(os.path.join(map_out_path, "ground-truth/" + image_id + ".txt"),
+                      "w") as new_f:  # 在ground-truth文件夹下写GT信息
                 root = ET.parse(os.path.join(Mydataset_path, "Annotations/" + image_id + ".xml")).getroot()
                 for obj in root.findall('object'):
                     difficult_flag = False

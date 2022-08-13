@@ -88,8 +88,8 @@ if __name__ == "__main__":
     #   2、了解imagenet数据集，首先训练分类模型，获得网络的主干部分权值，分类模型的 主干部分 和该模型通用，基于此进行训练。
     # ----------------------------------------------------------------------------------------------------------------------------#
     model_path = ''
-
-    pretrained = True
+    # 指定预训练路径，这里的预训练路径仅仅包含backbone部分。
+    pretrained_path = ''
     # ------------------------------------------------------#
     #   input_shape     输入的shape大小，一定要是32的倍数
     # ------------------------------------------------------#
@@ -254,9 +254,26 @@ if __name__ == "__main__":
     # ------------------------------------------------------#
     #   创建yolo模型
     # ------------------------------------------------------#
-    model = YoloBody(num_classes, pretrained=pretrained)
-    if not pretrained:
-        weights_init(model)
+    model = YoloBody(num_classes)
+    weights_init(model)
+    if pretrained_path != '':
+        if local_rank == 0:
+            print("Load weights {}".format(pretrained_path))
+        model_dict = model.state_dict()
+        pretrained_dict = torch.load(pretrained_path, map_location=device)
+        load_key, no_load_key, temp_dict = [], [], {}
+        for k, v in pretrained_dict.items():
+            if k in model_dict.keys() and np.shape(model_dict[k]) == np.shape(v):
+                temp_dict[k] = v
+                load_key.append(k)
+            else:
+                no_load_key.append(k)
+        model_dict.update(temp_dict)
+        model.load_state_dict(model_dict)
+        if local_rank == 0:
+            print("\nSuccessful Load Key:", str(load_key)[:500], "……\nSuccessful Load Key Num:", len(load_key))
+            print("\nFail To Load Key:", str(no_load_key)[:500], "……\nFail To Load Key num:", len(no_load_key))
+
     if model_path != '':
         # ------------------------------------------------------#
         #   权值文件请看README，百度网盘下载
