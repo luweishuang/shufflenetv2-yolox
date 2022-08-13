@@ -1,3 +1,0 @@
-D:\python_all\WorkSpace001\yolox-pytorch-2.1\data/BMPImage/2020-09-18-09-49-49-MilliSnap01-wq_w_wxy01-A-0-Image6.bmp 146,434,186,503,0 130,97,161,142,0
-D:\python_all\WorkSpace001\yolox-pytorch-2.1\data/BMPImage/2020-09-18-09-49-51-MilliSnap01-wq_w_wxy01-B-0-Image5.bmp 118,578,169,641,0
-D:\python_all\WorkSpace001\yolox-pytorch-2.1\data/BMPImage/2020-09-18-09-49-51-MilliSnap01-wq_w_wxy01-B-0-Image8.bmp 130,581,176,643,0
