@@ -79,7 +79,7 @@ def fit_one_epoch(model_train, model, ema, yolo_loss, loss_history, eval_callbac
         pbar = tqdm(total=epoch_step_val, desc=f'Epoch {epoch + 1}/{Epoch}',postfix=dict,mininterval=0.3)
 
     if ema:
-        model_train_eval = ema.em  # 验证的时候调用em模型，而不是训练完的模型
+        model_train_eval = ema.ema  # 验证的时候调用em模型，而不是训练完的模型
     else:
         model_train_eval = model_train.eval()
         

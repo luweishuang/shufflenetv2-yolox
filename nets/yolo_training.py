@@ -144,7 +144,7 @@ class YOLOLoss(nn.Module):
 
         num_fg = 0.0
         for batch_idx in range(outputs.shape[0]):  # 遍历当前batch
-            num_gt = len(labels[batch_idx])  # GT框的数量
+            num_gt = len(labels[batch_idx])  # 当前图片的GT框的数量
             if num_gt == 0:
                 cls_target = outputs.new_zeros((0, self.num_classes))
                 reg_target = outputs.new_zeros((0, 4))
@@ -171,11 +171,12 @@ class YOLOLoss(nn.Module):
                 )
                 torch.cuda.empty_cache()
                 num_fg += num_fg_img  # 用于计量当前batch所有的gt框个数
+                # F.one_hot生成每个正样本[num_pre,num_class]的类别one_hot_mask
                 cls_target = F.one_hot(gt_matched_classes.to(torch.int64),
                                        self.num_classes).float() * pred_ious_this_matching.unsqueeze(
-                    -1)  # [num_gt,num_class]
+                    -1)
                 obj_target = fg_mask.unsqueeze(-1)  # 置信度的标签[8400,1], 至此fg_mask只在细样本处标记为true
-                reg_target = gt_bboxes_per_image[matched_gt_inds]  # [num_gt,4] 位置标签
+                reg_target = gt_bboxes_per_image[matched_gt_inds]  # [num_pre,4] 位置标签，根据正样本对应的gt框，生成对应的标签，因为这里存在多个正样本对应一个gt框的情况
             cls_targets.append(cls_target)
             reg_targets.append(reg_target)
             obj_targets.append(obj_target.type(cls_target.type()))
@@ -443,10 +444,13 @@ class YOLOLoss(nn.Module):
         # ------------------------------------------------------------#
         #   获得特征点对应的物品种类
         # ------------------------------------------------------------#
-        matched_gt_inds = matching_matrix[:, fg_mask_inboxes].argmax(0)  # 得到精筛选后的正样本 分别是对应哪个gt框的
+        matched_gt_inds = matching_matrix[:, fg_mask_inboxes].argmax(0)  # 得到精筛选后的正样本 分别是对应哪个gt框的 (索引)
         gt_matched_classes = gt_classes[matched_gt_inds]  # 根据gt框的类别，来得到正样本对应的类别， 正样本的类别应该与其对应的gt框的类别相同
         # matching_matrix * pair_wise_ious 只得到正样本处和gt框的Iou
+        #  matching_matrix=[num_gt,num_pre] 该矩阵用来表示每一个Gt框由粗样本中哪些框进行预测，也就是
+        # pred_ious_this_matching = [num_pre,]这里num_pre是细样本个数
         pred_ious_this_matching = (matching_matrix * pair_wise_ious).sum(0)[fg_mask_inboxes]  # 得到正样本与其gt框的iou大小
+        # gt_matched_classes为正样本框类别索引，pred_ious_this_matching为正样本框与其gt框的iou，matched_gt_inds为每个正样本对应那个Gt框的索引  它们的Shape都为[num_pre
         return num_fg, gt_matched_classes, pred_ious_this_matching, matched_gt_inds
 
 
